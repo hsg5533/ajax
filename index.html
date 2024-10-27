@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <script src="./js/jquery.js"></script>
+    <script src="./js/axios.js"></script>
+    <script>
+      const baseUrl = "http://localhost:5000/";
+
+      function getCookie(cookieName) {
+        const cookies = document.cookie.split(";");
+        for (var i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          const cookieParts = cookie.split("=");
+          const name = cookieParts[0];
+          const value = cookieParts.slice(1).join("=");
+          if (name === cookieName) {
+            return decodeURIComponent(value);
+          }
+        }
+        return null;
+      }
+
+      function serialize(obj) {
+        const str = [];
+        for (let p in obj) {
+          if (obj.hasOwnProperty(p)) {
+            str.push(encodeURIComponent(p) + "=" + encodeURIComponent(obj[p]));
+          }
+        }
+        return str.join("&");
+      }
+
+      // 옛날 방식
+      function sendRequest(url, params, method) {
+        return new Promise((resolve, reject) => {
+          const xhr = new XMLHttpRequest();
+          xhr.open(
+            method,
+            method === "GET" ? `${url}?${serialize(params)}` : url,
+            true
+          );
+          xhr.withCredentials = true;
+          xhr.setRequestHeader("Accept", "application/json");
+          xhr.setRequestHeader("Content-Type", "application/json");
+          xhr.setRequestHeader("X-CSRFToken", getCookie("csrftoken") || "");
+          xhr.onload = function () {
+            if (xhr.status === 200) {
+              resolve(JSON.parse(xhr.responseText));
+            } else {
+              reject(JSON.parse(xhr.responseText));
+            }
+          };
+          xhr.onerror = function () {
+            reject(xhr.statusText);
+          };
+          xhr.send(method !== "GET" ? JSON.stringify(params) : null);
+        });
+      }
+
+      sendRequest(
+        "http://localhost:5000/login",
+        {
+          username: "user1",
+          password: "pass1",
+        },
+        "post"
+      ).then((res) => {
+        console.log("POST 통신 성공", res);
+      });
+
+      sendRequest("http://localhost:5000/todos", {}, "GET")
+        .then((res) => {
+          console.log("GET 통신 성공", res);
+        })
+        .catch((err) => {
+          console.log("GET 통신 실패", err);
+        });
+
+      sendRequest("http://localhost:5000/todos", { text: "test" }, "POST")
+        .then((res) => {
+          console.log("POST 통신 성공", res);
+        })
+        .catch((err) => {
+          console.log("POST 통신 실패", err);
+        });
+
+      sendRequest("http://localhost:5000/todos/1", { text: "test" }, "PUT")
+        .then((res) => {
+          console.log("Put 통신 성공", res);
+        })
+        .catch((err) => {
+          console.log("Put 통신 실패", err);
+        });
+
+      sendRequest("http://localhost:5000/todos/1", { text: "test" }, "DELETE")
+        .then((res) => {
+          console.log("Delete 통신 성공", res);
+        })
+        .catch((err) => {
+          console.log("Delete 통신 실패", err);
+        });
+
+      // jquery 라이브러리 사용
+      async function ajaxRequest(url, params, method) {
+        try {
+          const response = await $.ajax({
+            url:
+              method === "GET"
+                ? `${baseUrl}${url}?${serialize(params)}`
+                : `${baseUrl}${url}`,
+            type: method,
+            headers: {
+              Accept: "application/json",
+              "Content-Type": "application/json",
+              "X-CSRFToken": getCookie("csrftoken") || "",
+            },
+            xhrFields: { withCredentials: true },
+            data: method !== "GET" ? JSON.stringify(params) : null,
+          });
+          const [cookies, data] = await Promise.all([
+            document.cookie,
+            response,
+          ]);
+          return data;
+        } catch (err) {
+          console.log(err);
+        }
+      }
+
+      ajaxRequest(
+        "login",
+        {
+          username: "user1",
+          password: "pass1",
+        },
+        "POST"
+      ).then((res) => {
+        console.log("POST 통신 성공", res);
+      });
+      ajaxRequest("todos", {}, "GET").then((res) => {
+        console.log("GET 통신 성공", res);
+      });
+      ajaxRequest("todos", { text: "와아아" }, "POST").then((res) => {
+        console.log("POST 통신 성공", res);
+      });
+
+      // axios 라이브러리 사용
+      async function axiosRequest(url, params, method) {
+        try {
+          const response = await axios({
+            url:
+              method === "GET"
+                ? `${baseUrl}${url}?${serialize(params)}`
+                : `${baseUrl}${url}`,
+            method: method,
+            headers: {
+              Accept: "application/json",
+              "Content-Type": "application/json",
+              "X-CSRFToken": getCookie("csrftoken") || "",
+            },
+            withCredentials: true,
+            data: method !== "GET" ? JSON.stringify(params) : null,
+          });
+          const [cookies, data] = await Promise.all([
+            document.cookie,
+            response,
+          ]);
+          return data;
+        } catch (err) {
+          console.log(err);
+        }
+      }
+
+      axiosRequest(
+        "login",
+        {
+          username: "user1",
+          password: "pass1",
+        },
+        "POST"
+      ).then((res) => {
+        console.log("POST 통신 성공", res);
+      });
+      axiosRequest("todos", {}, "GET").then((res) => {
+        console.log("GET 통신 성공", res);
+      });
+      axiosRequest("todos", { text: "와아아" }, "POST").then((res) => {
+        console.log("POST 통신 성공", res);
+      });
+
+      // 요즘 방식
+      async function request(url, params, method) {
+        try {
+          const response = await fetch(
+            method === "GET"
+              ? `${baseUrl}${url}?${serialize(params)}`
+              : `${baseUrl}${url}`,
+            {
+              method: method,
+              headers: {
+                Referer: baseUrl,
+                Accept: "application/json",
+                "Content-Type": "application/json",
+                "X-CSRFToken": getCookie("csrftoken") || "",
+              },
+              credentials: "include",
+              body: method !== "GET" ? JSON.stringify(params) : null,
+            }
+          );
+          const [cookies, data] = await Promise.all([
+            document.cookie,
+            response,
+          ]);
+          return data;
+        } catch (err) {
+          console.log(err);
+        }
+      }
+    </script>
+  </body>
+</html>
