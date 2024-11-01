@@ -1,5 +1,6 @@
-
 # Ajax, XHR, Fetch, Axios
+
+## live demo : https://hsg5533.github.io/ajax/
 
 ## 1. Ajax (Asynchronous JavaScript and XML)
 - **개념**: Ajax는 비동기적으로 서버와 데이터를 교환할 수 있는 기술로, 주로 웹 페이지의 일부를 동적으로 업데이트하는 데 사용됩니다. 이를 통해 사용자에게 더 나은 경험을 제공합니다.
