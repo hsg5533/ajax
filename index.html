@@ -185,7 +185,11 @@
           xhr.setRequestHeader("Content-Type", "application/json");
           xhr.setRequestHeader("X-CSRFToken", getCookie("csrftoken") || "");
           xhr.onload = function () {
-            resolve(JSON.parse(xhr.responseText));
+            const contentType = xhr.getResponseHeader("Content-Type");
+            if (contentType.includes("application/json")) {
+              resolve(JSON.parse(xhr.responseText));
+            }
+            resolve(xhr.responseText);
           };
           xhr.onerror = function () {
             reject(xhr.statusText);
@@ -194,7 +198,7 @@
         });
       }
 
-      sendRequest("https://hsg5533.github.io/ajax", {}, "GET")
+      sendRequest("http://127.0.0.1:5500/index.html", {}, "GET")
         .then((res) => console.log("xhr GET 통신 성공", res))
         .catch((err) => console.log("xhr GET 통신 실패", err));
 
